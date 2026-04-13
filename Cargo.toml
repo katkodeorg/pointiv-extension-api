@@ -1,0 +1,22 @@
+[package]
+name        = "pointiv-extension-api"
+version     = "0.1.0"
+edition     = "2024"
+description = "The official Rust SDK for building Pointiv community extensions"
+license     = "MIT"
+repository  = "https://github.com/katkodeorg/pointiv-extension-api"
+keywords    = ["pointiv", "extension", "wasm", "plugin"]
+categories  = ["wasm", "development-tools"]
+readme      = "README.md"
+
+[profile.release]
+opt-level     = "s"
+lto           = true
+codegen-units = 1
+strip         = "symbols"
+panic         = "abort"
+
+[dependencies]
+extism-pdk = "1.4.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
