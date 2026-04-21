@@ -77,6 +77,10 @@ extern "ExtismHost" {
     fn pointiv_storage_list() -> String;
 
     fn pointiv_clipboard_read() -> String;
+
+    /// Send a prompt to the Pointiv LLM and return the plain-text reply.
+    /// Returns an empty string if the extension does not have the `"ai"` permission.
+    fn pointiv_ai_complete(prompt: String) -> String;
 }
 
 /// Structured logging to `~/.pointiv/trace.jsonl`. No permission required.
@@ -140,8 +144,36 @@ pub mod clipboard {
     }
 }
 
+/// Call the Pointiv LLM. Requires `"ai"` in your `pointiv-extension.json` permissions.
+///
+/// This is a simple completion call — you craft the prompt, the model returns
+/// a plain-text string. There is no tool-chaining or orchestration; your
+/// extension stays in full control of what it asks and what it does with
+/// the answer.
+///
+/// ```rust,no_run
+/// use pointiv_extension_api::prelude::*;
+///
+/// #[plugin_fn]
+/// pub fn execute(Json(input): Json<Input>) -> FnResult<Json<Output>> {
+///     let summary = ai::complete(&format!(
+///         "Summarise this in one sentence: {}", input.text
+///     ));
+///     Ok(Json(Output::text(summary)))
+/// }
+/// ```
+pub mod ai {
+    use super::pointiv_ai_complete;
+
+    /// Send `prompt` to the LLM and return the plain-text completion.
+    /// Returns an empty string if the `"ai"` permission was not granted.
+    pub fn complete(prompt: &str) -> String {
+        unsafe { pointiv_ai_complete(prompt.to_string()).ok() }.unwrap_or_default()
+    }
+}
+
 pub mod prelude {
-    pub use crate::{clipboard, log, storage, Input, Output};
+    pub use crate::{ai, clipboard, log, storage, Input, Output};
     pub use extism_pdk::{plugin_fn, FnResult, Json};
     pub use serde::{Deserialize, Serialize};
 }
