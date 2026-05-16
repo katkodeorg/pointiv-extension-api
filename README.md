@@ -1,15 +1,15 @@
 # pointiv-extension-api
 
-Rust SDK for building [Pointiv](https://pointiv.katkode.com) extensions.
+Rust SDK for [Pointiv](https://pointiv.katkode.com) WASM extensions.
 
-## Getting started
+## Setup
 
 ```toml
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-pointiv-extension-api = "0.1"
+pointiv-extension-api = "0.2.1"
 extism-pdk = "1"
 ```
 
@@ -18,78 +18,102 @@ use pointiv_extension_api::prelude::*;
 
 #[plugin_fn]
 pub fn execute(Json(input): Json<Input>) -> FnResult<Json<Output>> {
-    let count: u64 = storage::read("runs")
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0) + 1;
-    storage::write("runs", &count.to_string());
-
-    Ok(Json(Output::text(format!("Hello, {}! (run #{})", input.text, count))))
+    Ok(Json(Output::text(format!("Hello, {}!", input.text))))
 }
 ```
 
-Build with:
+Build:
 
 ```sh
 cargo build --release --target wasm32-wasip1
 ```
 
-## Input
+## Input and output
 
-| Field     | Description                                    |
-|-----------|------------------------------------------------|
-| `text`    | Selected text or clipboard contents            |
-| `context` | Same as `text`                                 |
-| `command` | What the user typed in the Pointiv popup       |
+`Input` has `text`, `context` (same as `text`), and `command` (what the user typed in the popup).
 
-## Output
-
-| Method                 | Effect                                      |
-|------------------------|---------------------------------------------|
-| `Output::text(v)`      | Show in result panel                        |
-| `Output::copy(v)`      | Copy to clipboard                           |
-| `Output::type_text(v)` | Type into the previously focused window     |
-| `Output::error(v)`     | Show as an error                            |
+`Output` helpers: `text`, `copy`, `type_text`, `error`.
 
 ## APIs
 
-**`storage::`** — sandboxed per-extension key/value store. Requires `"storage"` permission.
+Add permissions in `pointiv-extension.json`. Without a permission, calls fail safely (empty string, status 403, or an error JSON field).
+
+| Module | Permission | What it does |
+|--------|------------|--------------|
+| `storage::` | `storage` | Per-extension key/value store |
+| `clipboard::` | `clipboard_read` | Read clipboard |
+| `ai::` | `ai` | LLM completion |
+| `http::` | `network` | Outbound HTTP (you supply auth headers) |
+| `google_calendar::` | `google_calendar` | Create Calendar events (Pointiv injects JWT) |
+| `google_gmail::` | `google_gmail` | Send Gmail (Pointiv injects JWT) |
+| `log::` | none | Log to `~/.pointiv/trace.jsonl` |
+
+### Storage
 
 ```rust
 storage::write("key", "value");
-let v = storage::read("key");           // Option<String>
+let v = storage::read("key");
 storage::write_json("key", &my_struct);
 let s: Option<MyStruct> = storage::read_json("key");
 ```
 
-**`log::`** — writes to `~/.pointiv/trace.jsonl`. No permission needed.
+### HTTP
 
 ```rust
-log::info("msg");
-log::warn("msg");
-log::error("msg");
+let resp = http::get("https://api.example.com/data");
+let resp = http::post("https://api.example.com", r#"{"x":1}"#);
+
+let resp = http::request(HttpRequest {
+    method: "GET".into(),
+    url: "https://api.example.com".into(),
+    headers: [("Authorization".into(), "Bearer token".into())].into(),
+    body: String::new(),
+});
 ```
 
-**`clipboard::`** — requires `"clipboard_read"` permission.
+### Google Calendar
+
+Connect Google in Pointiv Settings first.
 
 ```rust
-let text = clipboard::read();
+google_calendar::schedule(
+    "Team standup",
+    "2026-06-01",
+    Some("09:00"),
+    Some("09:30"),
+    Some("Daily sync"),
+)?;
+```
+
+### Gmail
+
+```rust
+google_gmail::send("you@example.com", "Subject", "Body text")?;
+```
+
+### Logging
+
+```rust
+log::info("started");
+log::warn("slow response");
+log::error("failed");
 ```
 
 ## Manifest
 
-Every extension needs a `pointiv-extension.json` at the repo root:
+`pointiv-extension.json` at the repo root:
 
 ```json
 {
-  "id":          "your-org.extension-name",
-  "name":        "My Extension",
+  "id": "community.your-name.my-extension",
+  "name": "My Extension",
   "description": "What it does",
-  "version":     "1.0.0",
-  "author":      "your-org",
-  "keywords":    ["word1", "word2"],
-  "runtime":     "wasm",
-  "main":        "extension.wasm",
-  "permissions": ["storage"]
+  "version": "1.0.0",
+  "author": "your-name",
+  "keywords": ["tag"],
+  "runtime": "wasm",
+  "main": "extension.wasm",
+  "permissions": ["storage", "network", "google_calendar", "google_gmail"]
 }
 ```
 
