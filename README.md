@@ -1,3 +1,28 @@
+# Deprecated: pointiv-extension-api
+
+This crate has been retired. Use the current Rust SDK instead:
+
+```toml
+[dependencies]
+pointiv-extension-sdk = "0.3"
+extism-pdk = "1"
+```
+
+Repository:
+
+```text
+https://github.com/katkodeorg/pointiv-extension-sdk-rust
+```
+
+Starter:
+
+```text
+https://github.com/katkodeorg/pointiv-extension-starter-rust.ptr
+```
+
+`pointiv-extension-api` remains here for historical reference only and should
+not be used for new extensions.
+
 # pointiv-extension-api
 
 Rust SDK for [Pointiv](https://pointiv.katkode.com) WASM extensions.

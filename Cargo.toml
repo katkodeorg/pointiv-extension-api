@@ -2,7 +2,7 @@
 name        = "pointiv-extension-api"
 version     = "0.2.1"
 edition     = "2024"
-description = "The official Rust SDK for building Pointiv community extensions"
+description = "DEPRECATED: use pointiv-extension-sdk instead"
 license     = "MIT"
 repository  = "https://github.com/katkodeorg/pointiv-extension-api"
 keywords    = ["pointiv", "extension", "wasm", "plugin"]

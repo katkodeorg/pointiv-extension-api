@@ -1,4 +1,12 @@
-//! The official Rust SDK for building [Pointiv](https://pointiv.katkode.com) extensions.
+//! Deprecated Rust SDK for building [Pointiv](https://pointiv.katkode.com) extensions.
+//!
+//! This crate has been retired. Use `pointiv-extension-sdk` instead:
+//!
+//! ```toml
+//! [dependencies]
+//! pointiv-extension-sdk = "0.3"
+//! extism-pdk = "1"
+//! ```
 //!
 //! ```toml
 //! [dependencies]
